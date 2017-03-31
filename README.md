@@ -3,6 +3,9 @@
 ## How to use:
 1. Clone the repository
 2. Run "npm install" ( to get all modules)
+3. Run "webpack"
+4. Run "node server"
+5. Server is running at 127.0.0.1:3000
 
 ## How to develop:
 1. Open 2 consoles
