@@ -1,12 +1,13 @@
-import TicTacToe from './TicTacToe.js'
-import io from 'socket.io-client'
+import TicTacToe from './TicTacToe.js';
+import io from 'socket.io-client';
 
 //https://socket.io/docs/client-api/
 class Client {
   constructor() {
+    self = this;
     this.Usernames = [];
-    this.PlayerUser = 'Sinmson';
-    this.EnemyPlayerUser = '';
+    this.Playername = '';
+    this.Enemyname = '';
     this.TicTacToeM = new TicTacToe();
     this.Chatmessages = [];
     this.EnemyFound = false;
@@ -14,6 +15,24 @@ class Client {
     this.IsTie = false;
     this.WonPlayername = '';
     this.socket = io.connect("http://localhost:3000");
+    this.Games = [
+      {
+        moves : 3,
+        enemyname : 'Niklas',
+        won: false
+      },
+      {
+        moves : 3,
+        enemyname : 'Niklas',
+        won: true
+      },
+      {
+        moves : 3,
+        enemyname : 'Niklas',
+        won: true
+      }
+    ];
+
     console.log('connected ' , this.socket);
 
     this.socket.on('hi', function ( data ) {
@@ -21,7 +40,16 @@ class Client {
     })
   }
 
+  addPlayer ( ) {
+    //Der Benutzername steht in Playername
 
+    console.log("addPlayer" , self.Playername);
+  }
+
+  startGame() {
+
+
+  }
 
   sendMessage ( message )
   {
