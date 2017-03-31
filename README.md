@@ -9,6 +9,7 @@
 
 ## How to develop:
 1. Open 2 consoles
+    - Run "npm install" ( if u didnt already )
     - Run "webpack --watch" ( to automaticly build the build.js after safes)
     - Run "node server" ( runs on port 3000)
 2. If compass installed ( needed to compile scss files)
