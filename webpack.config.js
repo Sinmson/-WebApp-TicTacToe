@@ -1,6 +1,8 @@
 var path = require('path')
 var webpack = require('webpack')
 
+process.traceDeprecation = true;
+
 module.exports = {
   entry: './src/main.js',
   output: {
@@ -15,13 +17,11 @@ module.exports = {
         loader: 'vue-loader',
         options: {
           loaders: {
-            {{#sass}}
             // Since sass-loader (weirdly) has SCSS as its default parse mode, we map
             // the "scss" and "sass" values for the lang attribute to the right configs here.
             // other preprocessors should work out of the box, no loader config like this necessary.
             'scss': 'vue-style-loader!css-loader!sass-loader',
             'sass': 'vue-style-loader!css-loader!sass-loader?indentedSyntax'
-            {{/sass}}
           }
           // other vue-loader options go here
         }
