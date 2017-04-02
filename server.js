@@ -24,6 +24,10 @@ function onConnect(socket)
 
   socket.emit('hi', 'Wenn das hier in der Chrome Konsole steht ist alles gut');
 
+  socket.on('message', function(data){
+    console.log(data);
+  })
+
   socket.on('disconnect', function(data){
     connections.splice(connections.indexOf(socket), 1);
     console.log('Disconnected: %s sockets connected', connections.length);
