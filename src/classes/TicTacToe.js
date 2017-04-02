@@ -4,8 +4,38 @@ class TicTacToe
 {
 
   constructor() {
-    this._playground = ['','','','','','','','',''];
+    this.Playground = new Array(9);
+    this.PlayerWon = false;
+    this.IsTie = false;
+    this.SymbolsMove = 'X';
+
   }
+
+  SetField( fieldNr , symbol )
+  {
+    this.Playground[fieldNr] = symbol;
+    if(symbol === 'X')
+    {
+      this.SymbolsMove = 'O';
+    }
+    else
+    {
+      this.SymbolsMove = 'X';
+    }
+  }
+
+  IsMoveValid( fieldNr , symbol )
+  {
+    if(!this.Playground[fieldNr] && symbol === this.SymbolsMove)
+    {
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+
 
   FullWidht( symbol )
   {
@@ -14,7 +44,7 @@ class TicTacToe
       var trueCounter = 0;
       for ( var i = 0; i < 3; i++ )
       {
-        if ( this._playground[ i + k ] == symbol )
+        if ( this.Playground[ i + k ] == symbol )
         {
           trueCounter++;
         }
@@ -36,7 +66,7 @@ class TicTacToe
       var trueCounter = 0;
       for ( var i = 0; i < 9; i = i + 3 )
       {
-        if ( this._playground[ i + k ] == symbol )
+        if ( this.Playground[ i + k ] == symbol )
         {
           trueCounter++;
         }
@@ -56,7 +86,7 @@ class TicTacToe
     var trueCounter = 0;
     for ( var k = 0; k < 9; k = k + 4 )
     {
-      if ( this._playground[ k ] == symbol )
+      if ( this.Playground[ k ] == symbol )
       {
         trueCounter++;
       }
@@ -69,7 +99,7 @@ class TicTacToe
     trueCounter = 0;
     for ( var k = 2; k < 7; k = k + 2 )
     {
-      if ( this._playground[ k ] == symbol )
+      if ( this.Playground[ k ] == symbol )
       {
         trueCounter++;
       }
