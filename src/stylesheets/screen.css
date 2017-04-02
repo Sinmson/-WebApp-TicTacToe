@@ -10,27 +10,35 @@ body, html, #app {
   width: 100vw;
   margin: 0;
   padding: 0;
+  background-color: #ecf0f1;
 }
 
-/* line 17, ../scss/screen.scss */
+/* line 18, ../scss/screen.scss */
 .bg-clouds {
   background-color: #ecf0f1 !important;
 }
 
-/* line 21, ../scss/screen.scss */
+/* line 22, ../scss/screen.scss */
 .cl-clouds {
   color: #ecf0f1 !important;
 }
 
-/* line 25, ../scss/screen.scss */
+/* line 26, ../scss/screen.scss */
 .space-between {
   -webkit-box-pack: justify !important;
   -ms-flex-pack: justify !important;
   justify-content: space-between !important;
 }
 
-/* line 31, ../scss/screen.scss */
+/* line 32, ../scss/screen.scss */
 .text-center {
   text-align: center !important;
   vertical-align: middle;
+}
+
+/* line 37, ../scss/screen.scss */
+.align-items-center {
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
 }
