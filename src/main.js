@@ -15,7 +15,7 @@ Vue.material.registerTheme('default', {
   warn: 'red'
 });
 
-new Vue({
+window.vue = new Vue({
   el: '#app',
   render: h => h(App)
 });

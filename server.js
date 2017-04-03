@@ -8,6 +8,15 @@ playerQueue = {};
 sockets = {};
 gamerooms = {};
 
+Object.prototype.getKeyByValue = function( value ) {
+  for( var prop in this ) {
+      if( this.hasOwnProperty( prop ) ) {
+           if( this[ prop ] === value )
+               return prop;
+      }
+  }
+}
+
 server.listen(process.env.PORT || 3000);
 console.log('Server running...');
 
@@ -19,12 +28,11 @@ app.get('/', function(req, res){
 
 io.on('connect', onConnect);
 
+
 function onConnect(socket)
 {
   sockets[socket.id] = socket;
   console.log('Connected: %s sockets connected', Object.keys(sockets).length);
-
-  socket.emit('hi', 'Wenn das hier in der Chrome Konsole steht ist alles gut');
 
   socket.on('message', function(data){
     console.log(data);
@@ -40,6 +48,13 @@ function onConnect(socket)
 
   socket.on("addPlayerToQueue", function (playername) {
     addPlayerTo(socket.id , playername , playerQueue);
+    var matchedGameroomName;
+    var i = 0;
+    while(matchedGameroomName = getPlayerGameroomname(playername) && i < 20)
+    {
+      socket.leave(matchedGameroomName);
+    }
+
     var keys = Object.keys(playerQueue);
     if(keys.length == 2)
     {
@@ -47,73 +62,67 @@ function onConnect(socket)
       var namesSorted = [];
       for (var i = 0; i < keys.length; i++) {
           namesSorted.push(playerQueue[keys[i]]);
-          // use val
       }
       namesSorted = namesSorted.sort();
 
       var gameroomName = "gameroom_" + namesSorted[0] + "_" + namesSorted[1];
-
+      var plIds = [];
       for(var i = 0; i < 2; i++)
       {
-        console.log("gameroom",gameroomName);
         var plId = playernames.getKeyByValue(namesSorted[i]);
-        console.log("plId" , plId);
+        plIds.push(plId);
         var plSocket = sockets[plId];
         plSocket.join(gameroomName);
-        console.log("Joined " , namesSorted[0] , namesSorted[1] , gameroomName);
       }
 
       gamerooms[gameroomName] = {
         player1 : namesSorted[0],
-        played1_Id : playernames.getKeyByValue(namesSorted[0]),
+        player1_Id : plIds[0],
         player2 : namesSorted[1],
-        played2_Id : playernames.getKeyByValue(namesSorted[1]),
+        player2_Id : plIds[1],
       }
 
       io.in(gameroomName).emit('enemyFound', gamerooms[gameroomName]);
-    }
 
-    console.log("Länge", Object.keys(playerQueue).length);
+      removePlayerFrom(gamerooms[gameroomName].player1_Id, playerQueue);
+      removePlayerFrom(gamerooms[gameroomName].player2_Id, playerQueue);
+    }
   });
 
-  socket.on("move" , function ( fieldNr ) {
-    var gameroomNames = Object.keys(gamerooms);
+  socket.on("move" , function ( fieldNr , symbol ) {
     var playername = playernames[socket.id];
-    var matchedGameroomName;
+    var matchedGameroomName = getPlayerGameroomname(playername);
 
-    for(var i = 0; i < gameroomNames.length; i++)
-    {
-      if(gameroomNames[i].includes(playername))
-      {
-        matchedGameroomName = gameroomNames[i];
-      }
-    }
     console.log("MOVE : " , fieldNr , playername , matchedGameroomName);
 
     if(matchedGameroomName)
     {
-      io.in(matchedGameroomName).emit('moved', fieldNr);
+      io.in(matchedGameroomName).emit('moved', fieldNr , playername);
     }
-  })
+  });
 
   socket.on("removePlayerFromQueue", function (playername) {
     removePlayerFrom(socket.id, playerQueue);
-  })
+  });
 
   socket.on('disconnect', function(data){
     removePlayerFrom(socket.id , sockets);
     console.log('Disconnected: %s sockets connected', Object.keys(sockets).length);
     console.log("");
 
+    //Spieler aus gameroom entfernen
+    var playername = playernames[socket.id];
+    var matchedGameroomName;
+    var i = 0;
+    while(matchedGameroomName = getPlayerGameroomname(playername) && i < 20)
+    {
+      socket.leave(matchedGameroomName);
+      i++;
+    }
+    console.log(io.sockets.adapter.rooms);
+
     removePlayerFrom(socket.id, playernames);
-    console.log( "playernames" , playernames);
-
-    console.log("");
-
     removePlayerFrom(socket.id, playerQueue);
-    console.log( "playerQueue" , playerQueue);
-    console.log("");
-
   });
 
   addPlayerTo = function(id, playername , arr)
@@ -126,14 +135,21 @@ function onConnect(socket)
     delete arr[id];
   }
 
-  Object.prototype.getKeyByValue = function( value ) {
-    for( var prop in this ) {
-        if( this.hasOwnProperty( prop ) ) {
-             if( this[ prop ] === value )
-                 return prop;
-        }
+  getPlayerGameroomname = function(playername)
+  {
+    var gameroomNames = Object.keys(gamerooms);
+    var matchedGameroomname = false;
+
+    for(var i = 0; i < gameroomNames.length; i++)
+    {
+      if(gameroomNames[i].includes(playername))
+      {
+        matchedGameroomname = gameroomNames[i];
+      }
     }
-}
+
+    return matchedGameroomname;
+  }
 
   /*
 

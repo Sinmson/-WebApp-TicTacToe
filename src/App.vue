@@ -127,6 +127,19 @@
         </md-layout>
       </md-layout>
 
+      <md-layout id="winner" v-if="enemyFound && !inQueue && (wonPlayername)" md-row md-align="center">
+        <h1 class="md-display-1">Winner: {{wonPlayername}}</h1>
+      </md-layout>
+      <md-layout id="winner" md-flex="50" v-if="enemyFound && !inQueue && (wonPlayername)" md-row md-align="center">
+        <md-layout  md-align="center" md-row md-tag="md-card-actions" md-flex="50">
+          <md-button class="md-raised bg-clouds">
+            <div class="" v-on:click="addPlayerToQueue()">
+              Neu suchen...
+            </div>
+          </md-button>
+        </md-layout>
+      </md-layout>
+
     </md-layout>
   </md-layout>
 </template>
@@ -168,9 +181,6 @@ var socket = Io.connect("http://localhost:3000"); //Funktionniert nur auf dem gl
 
 console.log('connected ' , this.socket);
 
-socket.on('hi', function ( data ) {
-  console.log("Data from Server: " , data);
-});
 
 socket.on("enemyFound" , function ( gameroom ) {
   var p1 = gameroom.player1;
@@ -184,14 +194,28 @@ socket.on("enemyFound" , function ( gameroom ) {
   {
     data.enemyname = p1;
   }
-
+  console.log("enemyFound: Init game");
+  data.wonPlayername = false;
   data.inQueue = false;
   data.enemyFound = true;
 });
 
-socket.on("moved", function ( fieldNr ) {
+socket.on("moved", function ( fieldNr , moveFromPlayername ) {
   console.log("MOVED : " , fieldNr);
-  data.ticTacToe.SetField( fieldNr );
+  var symbol = 'O';
+
+  if(moveFromPlayername == data.playername)
+  {
+    symbol = 'X'
+  }
+
+  data.ticTacToe.SetField( fieldNr , symbol );
+  if(data.ticTacToe.DidMoveWinTheGame(symbol))
+  {
+    data.wonPlayername = moveFromPlayername;
+  }
+
+
   data.ticTacToe.Playground.__ob__.dep.notify();
   console.log(data.ticTacToe);
 });
@@ -242,11 +266,17 @@ export default {
     },
     addPlayerToQueue() {
       console.log("Add player to Queue " , this.playername);
+
+      data.ticTacToe = new TicTacToe();
+      data.wonPlayername = false;
+      data.inQueue = true;
+      data.enemyFound = false;
+
       socket.emit("addPlayerToQueue", this.playername);
     },
 
     sendMove( fieldNr ) {
-      socket.emit("move" , fieldNr);
+      socket.emit("move" , fieldNr) , 'X';
     },
 
     fakeEnemyFound() {
@@ -350,7 +380,7 @@ export default {
   }
 
   #MatchPlayers {
-    margin-bottom: 50px;
+    margin-bottom: 30px;
     margin-top: 50px;
 
     @media (max-width: 500px) {
