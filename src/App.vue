@@ -41,36 +41,36 @@
       <md-layout id="searchbox" v-show="!enemyFound" md-tag="md-card" md-gutter="40" md-column md-flex="50" md-align="center">
         <md-layout md-tag="md-card-content" md-flex="100">
           <md-input-container @:click="handleSearchGamePressed()">
-            <md-input  v-model="playername" :disabled="inQue || enemyFound" type="text" placeholder="Spielername">
+            <md-input  v-model="playername" :disabled="inQueue || enemyFound" type="text" placeholder="Spielername">
 
             </md-input>
           </md-input-container>
         </md-layout>
         <md-layout  class="space-between" md-row md-tag="md-card-actions" md-flex="100">
-          <md-button class="md-raised bg-clouds" :disabled="inQue">
+          <md-button class="md-raised bg-clouds" :disabled="inQueue">
             <div class="" v-on:click="handleSearchGamePressed()">
               Suche Spiel...
             </div>
           </md-button>
-          <md-button class="md-raised bg-clouds" :disabled="!inQue">
+          <md-button class="md-raised bg-clouds" :disabled="!inQueue">
             <div class="" v-on:click="fakeEnemyFound()">
               DEBUG: Spiel gefunden
             </div>
           </md-button>
         </md-layout>
       </md-layout>
-      <md-layout v-if="inQue" id="loader" md-column md-align="center">
-        <md-spinner :md-size="150" :md-indeterminate="inQue || enemyFound" >
+      <md-layout v-if="inQueue" id="loader" md-column md-align="center">
+        <md-spinner :md-size="150" :md-indeterminate="inQueue || enemyFound" >
         </md-spinner>
         <h3 class="md-Title"> Suche Gegner ....</h3>
       </md-layout>
 
 
-      <md-layout id="MatchPlayers" v-if="enemyFound && !inQue" md-row md-align="center">
+      <md-layout id="MatchPlayers" v-if="enemyFound && !inQueue" md-row md-align="center">
         <h1 class="md-display-2">{{playername}} vs. {{enemyname}}</h1>
       </md-layout>
 
-      <md-layout v-if="enemyFound && !inQue" md-column class="align-items-center" md-align="center">
+      <md-layout v-if="enemyFound && !inQueue" md-column class="align-items-center" md-align="center">
       <!-- <md-layout md-column class="align-items-center" md-align="center"> -->
         <md-layout id="playground" md-row md-flex="50" md-align="center">
           <div>
@@ -132,41 +132,75 @@
 </template>
 
 <script>
-import Client from './classes/Client.js';
 import TicTacToe from './classes/TicTacToe.js';
+import Io from 'socket.io-client';
 
+var data = {
+  ticTacToe : new TicTacToe(),
+  inQueue : false,
+  playernames : [],
+  playername : '',
+  enemyname : '',
+  chatmessages : [],
+  enemyFound : false,
+  wonPlayername : '',
+  games : [
+    {
+      moves : 3,
+      enemyname : 'Niklas',
+      won: false
+    },
+    {
+      moves : 3,
+      enemyname : 'Niklas',
+      won: true
+    },
+    {
+      moves : 3,
+      enemyname : 'Niklas',
+      won: true
+    }
+  ]
+}
+
+var socket = Io.connect("http://localhost:3000"); //Funktionniert nur auf dem gleichen pc
+//  this.socket = io.connect("http://192.168.178.45:3000"); //Funktioniert im ganzen netzwerk. richtige IP eintragen
+
+console.log('connected ' , this.socket);
+
+socket.on('hi', function ( data ) {
+  console.log("Data from Server: " , data);
+});
+
+socket.on("enemyFound" , function ( gameroom ) {
+  var p1 = gameroom.player1;
+  var p2 = gameroom.player2;
+
+  if(p1 == data.playername)
+  {
+    data.enemyname = p2;
+  }
+  else
+  {
+    data.enemyname = p1;
+  }
+
+  data.inQueue = false;
+  data.enemyFound = true;
+});
+
+socket.on("moved", function ( fieldNr ) {
+  console.log("MOVED : " , fieldNr);
+  data.ticTacToe.SetField( fieldNr );
+  data.ticTacToe.Playground.__ob__.dep.notify();
+  console.log(data.ticTacToe);
+});
 
 export default {
   name: 'app',
   data () {
-    return {
-      client : new Client(),
-      ticTacToe : new TicTacToe(),
-      inQue : false,
-      playernames : [],
-      playername : '',
-      enemyname : '',
-      chatmessages : [],
-      enemyFound : false,
-      wonPlayername : '',
-      games : [
-        {
-          moves : 3,
-          enemyname : 'Niklas',
-          won: false
-        },
-        {
-          moves : 3,
-          enemyname : 'Niklas',
-          won: true
-        },
-        {
-          moves : 3,
-          enemyname : 'Niklas',
-          won: true
-        }
-      ]
-    }
+    return data;
+
   },
   methods : {
     toggleSidenav() {
@@ -191,21 +225,32 @@ export default {
 
       if(this.ticTacToe.IsMoveValid( fieldNr , 'X'))
       {
-        this.client.SendMove ( this.playername , this.enemyname , fieldNr );
-        this.ticTacToe.SetField( fieldNr , 'X' );
+        this.sendMove ( fieldNr );
 
         console.log("Clicked " + fieldNr , this.ticTacToe.Playground);
-        this.ticTacToe.Playground.__ob__.dep.notify();
       }
     },
     handleSearchGamePressed() {
-      console.log("adnjlodjals");
-      this.inQue=true;
-      this.client.AddPlayer(this.playername);
+      this.inQueue=true;
+      this.addPlayer();
+      this.addPlayerToQueue();
+    },
+
+    addPlayer() {
+      console.log("Add player " , this.playername);
+      socket.emit("addPlayer", this.playername);
+    },
+    addPlayerToQueue() {
+      console.log("Add player to Queue " , this.playername);
+      socket.emit("addPlayerToQueue", this.playername);
+    },
+
+    sendMove( fieldNr ) {
+      socket.emit("move" , fieldNr);
     },
 
     fakeEnemyFound() {
-      this.inQue = false;
+      this.inQueue = false;
       this.enemyFound = true;
       this.enemyname = 'Kuruneko';
     }
@@ -214,6 +259,8 @@ export default {
 
   }
 }
+
+
 </script>
 
 <style lang="scss">

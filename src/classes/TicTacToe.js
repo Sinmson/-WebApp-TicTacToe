@@ -4,17 +4,17 @@ class TicTacToe
 {
 
   constructor() {
-    this.Playground = new Array(9);
+    this.Playground = ['','','','','','','','',''];
     this.PlayerWon = false;
     this.IsTie = false;
     this.SymbolsMove = 'X';
 
   }
 
-  SetField( fieldNr , symbol )
+  SetField( fieldNr )
   {
-    this.Playground[fieldNr] = symbol;
-    if(symbol === 'X')
+    this.Playground[fieldNr] = this.SymbolsMove;
+    if(this.SymbolsMove === 'X')
     {
       this.SymbolsMove = 'O';
     }
