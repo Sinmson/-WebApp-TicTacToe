@@ -37,37 +37,30 @@
 
     <!-- <md-layout md-flex="25"></md-layout> -->
 
-    <md-layout md-gutter="40" md-column md-flex="100" md-align="center" class="main-content">
-      <md-layout id="searchbox" v-show="!enemyFound" md-tag="md-card" md-gutter="40" md-column md-flex="50" md-align="center">
+    <md-layout  md-column md-flex="100" md-align="center" class="main-content">
+      <md-layout id="searchbox" v-show="!enemyFound" md-tag="md-card" md-gutter="40" md-column md-flex="50" md-flex-xsmall="90" md-align="center">
         <md-layout md-tag="md-card-content" md-flex="100">
           <md-input-container @:click="handleSearchGamePressed()">
-            <md-input  v-model="playername" :disabled="inQueue || enemyFound" type="text" placeholder="Spielername">
+            <md-input autofocus @keyup.enter.native="handleSearchGamePressed()"  v-model="playername" :disabled="inQueue || enemyFound" type="text" placeholder="Spielername">
 
             </md-input>
           </md-input-container>
         </md-layout>
         <md-layout  class="space-between" md-row md-tag="md-card-actions" md-flex="100">
-          <md-button class="md-raised bg-clouds" :disabled="inQueue">
-            <div class="" v-on:click="handleSearchGamePressed()">
+          <md-button @click.native="handleSearchGamePressed()" class="md-raised bg-clouds" :disabled="inQueue">
               Suche Spiel...
-            </div>
-          </md-button>
-          <md-button class="md-raised bg-clouds" :disabled="!inQueue">
-            <div class="" v-on:click="fakeEnemyFound()">
-              DEBUG: Spiel gefunden
-            </div>
           </md-button>
         </md-layout>
       </md-layout>
       <md-layout v-if="inQueue" id="loader" md-column md-align="center">
         <md-spinner :md-size="150" :md-indeterminate="inQueue || enemyFound" >
         </md-spinner>
-        <h3 class="md-Title"> Suche Gegner ....</h3>
+        <md-layout md-tag="h3" md-hide-xsmall class="md-Title"> Suche Gegner ....</md-layout>
       </md-layout>
 
 
       <md-layout id="MatchPlayers" v-if="enemyFound && !inQueue" md-row md-align="center">
-        <h1 class="md-display-2">{{playername}} vs. {{enemyname}}</h1>
+        <div class="md-display-2">{{playername}} vs. {{enemyname}}</div>
       </md-layout>
 
       <md-layout v-if="enemyFound && !inQueue" md-column class="align-items-center" md-align="center">
@@ -127,10 +120,11 @@
         </md-layout>
       </md-layout>
 
-      <md-layout id="winner" v-if="enemyFound && !inQueue && (wonPlayername)" md-row md-align="center">
-        <h1 class="md-display-1">Winner: {{wonPlayername}}</h1>
+      <md-layout id="winner" v-if="enemyFound && !inQueue && (wonPlayername || isTie)" md-row md-align="center">
+        <h1 class="md-display-1" v-if="!isTie">Gewinner: {{wonPlayername}}</h1>
+        <h1 class="md-display-1" v-if="isTie">Unentschieden!</h1>
       </md-layout>
-      <md-layout id="winner" md-flex="50" v-if="enemyFound && !inQueue && (wonPlayername)" md-row md-align="center">
+      <md-layout md-flex="50" v-if="enemyFound && !inQueue && (wonPlayername || isTie)" md-row md-align="center">
         <md-layout  md-align="center" md-row md-tag="md-card-actions" md-flex="50">
           <md-button class="md-raised bg-clouds">
             <div class="" v-on:click="addPlayerToQueue()">
@@ -139,9 +133,32 @@
           </md-button>
         </md-layout>
       </md-layout>
+      <md-layout id="chat" v-show="enemyFound && !inQueue" class="nowrap" md-column>
+        <md-layout id="messageScrollerContainer" class="margin-top-auto messages" md-flex="100">
+          <md-layout md-flex="100" md-hide-xsmall class="message" v-for="(chatmessage, index) in chatmessages" :key="chatmessage">
+            <strong>{{chatmessage.sendername}}:</strong>&nbsp;{{chatmessage.message}}
+          </md-layout>
+        </md-layout>
+        <md-layout md-flex="100">
+          <md-input-container  class="md-input-placeholder">
+            <md-input @keyup.enter.native="sendMessage()" v-model="chatmassage" :disabled="!inQueue && !enemyFound" type="text" placeholder="Nachricht...">
 
+            </md-input>
+            <button type="button" class="md-button md-icon-button md-toggle-password md-theme-default"> <i aria-hidden="true" class="md-icon md-theme-default material-icons">visibility</i><div class="md-ink-ripple"><div class="md-ripple md-fadeout md-active" style="width: 40px; height: 40px; top: 12px; left: 0.046875px;"></div></div></button>
+          </md-input-container>
+        </md-layout>
+        <md-layout class="messages nowrap" md-column md-flex="100">
+          <div class="message md-flex-100 md-hide-small-and-up" v-for="(chatmessage, index) in chatmessagesReversed" :key="chatmessage">
+            <strong>{{chatmessage.sendername}}:</strong>&nbsp;{{chatmessage.message}}
+          </div>
+        </md-layout>
+      </md-layout>
     </md-layout>
+
+
   </md-layout>
+
+
 </template>
 
 <script>
@@ -154,9 +171,28 @@ var data = {
   playernames : [],
   playername : '',
   enemyname : '',
-  chatmessages : [],
+  chatmessages : [
+    {
+      sendername: 'Judith',
+      message: 'Hallo'
+    },
+    {
+      sendername: 'Tim',
+      message: 'Hi!'
+    },
+    {
+      sendername: 'Judith',
+      message: 'Was geht ab?'
+    },
+    {
+      sendername: 'Tim',
+      message: 'Nicht viel, bei dir?'
+    }
+  ],
+  chatmassage : '',
   enemyFound : false,
   wonPlayername : '',
+  isTie : false,
   games : [
     {
       moves : 3,
@@ -176,10 +212,10 @@ var data = {
   ]
 }
 
-var socket = Io.connect("http://localhost:3000"); //Funktionniert nur auf dem gleichen pc
-//  this.socket = io.connect("http://192.168.178.45:3000"); //Funktioniert im ganzen netzwerk. richtige IP eintragen
+// var socket = Io.connect("http://localhost:3000"); //Funktionniert nur auf dem gleichen pc
+ var socket = Io.connect("http://192.168.178.45:3000"); //Funktioniert im ganzen netzwerk. richtige IP eintragen
 
-console.log('connected ' , this.socket);
+console.log('connected ' , socket);
 
 
 socket.on("enemyFound" , function ( gameroom ) {
@@ -198,6 +234,9 @@ socket.on("enemyFound" , function ( gameroom ) {
   data.wonPlayername = false;
   data.inQueue = false;
   data.enemyFound = true;
+  data.chatmassage = '';
+  data.isTie = false;
+  data.chatmessages = [];
 });
 
 socket.on("moved", function ( fieldNr , moveFromPlayername ) {
@@ -210,15 +249,51 @@ socket.on("moved", function ( fieldNr , moveFromPlayername ) {
   }
 
   data.ticTacToe.SetField( fieldNr , symbol );
+  console.log(data.ticTacToe);
   if(data.ticTacToe.DidMoveWinTheGame(symbol))
   {
     data.wonPlayername = moveFromPlayername;
+  }
+  else if(data.ticTacToe.IsTie())
+  {
+    data.isTie = true;
   }
 
 
   data.ticTacToe.Playground.__ob__.dep.notify();
   console.log(data.ticTacToe);
 });
+
+var scrollChatDown = function() {
+  var container = document.querySelector("#messageScrollerContainer");
+  container.scrollTop = container.scrollHeight + 24;
+}
+
+var getSwappedArr = function(arrayToSwap) {
+  var array = JSON.parse(JSON.stringify(arrayToSwap));
+  var left = null;
+  var right = null;
+  var length = array.length;
+  for (left = 0; left < length / 2; left += 1)
+  {
+      right = length - 1 - left;
+      var temporary = array[left];
+      array[left] = array[right];
+      array[right] = temporary;
+  }
+  return array;
+}
+
+socket.on("messaged", function (message) {
+  console.log("Got a message" , message.sendername , message.message);
+  data.chatmessages.push(message);
+  data.chatmessages.__ob__.dep.notify();
+});
+
+var charScroler = setInterval(scrollChatDown , 500);
+
+
+
 
 export default {
   name: 'app',
@@ -227,6 +302,9 @@ export default {
 
   },
   methods : {
+    sayHello() {
+      console.log("Hi, I am here to say hello.");
+    },
     toggleSidenav() {
       this.$refs.sidenav.toggle();
     },
@@ -278,15 +356,29 @@ export default {
     sendMove( fieldNr ) {
       socket.emit("move" , fieldNr) , 'X';
     },
+    sendMessage() {
+      socket.emit("message", {sendername: this.playername , message: this.chatmassage});
 
+      this.chatmassage = '';
+    },
     fakeEnemyFound() {
       this.inQueue = false;
       this.enemyFound = true;
       this.enemyname = 'Kuruneko';
     }
   },
+  watch: {
+    // 'chatmessages' : {
+    //   deep: true,
+    //   handler: function (val, oldVal) {
+    //     scrollChatDown();
+    //   }
+    // }
+  },
   computed: {
-
+    chatmessagesReversed : function () {
+      return getSwappedArr(this.chatmessages);
+    }
   }
 }
 
@@ -369,13 +461,41 @@ export default {
 
   .main-content {
     min-height: 100%;
+    z-index: 100;
   }
 
-  .md-button {
-    padding: 0;
+  #chat {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    min-height: 300px;
+    max-height: 70vh;
+    width: 300px;
 
-    & > div {
-      padding: 0 16px;
+    @media (max-width: 600px) {
+      margin-bottom: 20px;
+      margin-top: 10px;
+      right: 0;
+      left: 0;
+      margin-left: auto;
+      margin-right: auto;
+      position: static;
+
+      & .messages {
+        margin-top: 0 !important;
+      }
+    }
+
+    & .messages {
+      overflow: hidden;
+      max-height: 500px;
+      z-index: 1;
+      padding: 0;
+      & .message {
+        margin: 2px 0;
+        width: 100%;
+        max-width: 100%;
+      }
     }
   }
 
@@ -383,13 +503,13 @@ export default {
     margin-bottom: 30px;
     margin-top: 50px;
 
-    @media (max-width: 500px) {
+    @media (max-width: 600px) {
       margin-bottom: 20px;
       margin-top: 10px;
     }
   }
 
-  @media (max-width: 500px) {
+  @media (max-width: 600px) {
     .md-display-2 {
       font-size: 30px;
     }

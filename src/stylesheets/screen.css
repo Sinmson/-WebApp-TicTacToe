@@ -42,3 +42,14 @@ body, html, #app {
   -ms-flex-align: center;
   align-items: center;
 }
+
+/* line 43, ../scss/screen.scss */
+.margin-top-auto {
+  margin-top: auto !important;
+}
+
+/* line 47, ../scss/screen.scss */
+.nowrap {
+  -ms-flex-wrap: nowrap;
+  flex-wrap: nowrap;
+}

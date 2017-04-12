@@ -5,23 +5,28 @@ class TicTacToe
 
   constructor() {
     this.Playground = ['','','','','','','','',''];
-    this.PlayerWon = false;
-    this.IsTie = false;
     this.SymbolsMove = 'X';
 
   }
 
-  SetField( fieldNr )
+  SetField( fieldNr , symbol )
   {
-    this.Playground[fieldNr] = this.SymbolsMove;
-    if(this.SymbolsMove === 'X')
+    this.Playground[fieldNr] = symbol;
+
+    if(symbol == 'X')
     {
       this.SymbolsMove = 'O';
     }
-    else
+    else if(symbol == 'O')
     {
       this.SymbolsMove = 'X';
     }
+
+    if(this.DidMoveWinTheGame(symbol))
+    {
+      this.SymbolsMove = false;
+    }
+    console.log("Switched SymbolsMove to " + this.SymbolsMove + " from " + symbol );
   }
 
   IsMoveValid( fieldNr , symbol )
@@ -34,6 +39,20 @@ class TicTacToe
     {
       return false;
     }
+  }
+
+  IsTie()
+  {
+    var counter = 0;
+    for(var i = 0; i < this.Playground.length; i++)
+    {
+      if(this.Playground[i])
+      {
+        counter++;
+      }
+    }
+
+    return counter == 9;
   }
 
 
@@ -112,19 +131,19 @@ class TicTacToe
     return false;
   }
 
-  DoesMoveWinTheGame( symbol )
+  DidMoveWinTheGame( symbol )
   {
-    if ( FullWidht( symbol ) )
+    if ( this.FullWidht( symbol ) )
     {
       return true;
     }
 
-    if ( FullHeight( symbol ) )
+    if ( this.FullHeight( symbol ) )
     {
       return true;
     }
 
-    if ( FullCross( symbol ) )
+    if ( this.FullCross( symbol ) )
     {
       return true;
     }

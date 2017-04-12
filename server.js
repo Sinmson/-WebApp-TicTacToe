@@ -48,11 +48,11 @@ function onConnect(socket)
 
   socket.on("addPlayerToQueue", function (playername) {
     addPlayerTo(socket.id , playername , playerQueue);
-    var matchedGameroomName;
-    var i = 0;
-    while(matchedGameroomName = getPlayerGameroomname(playername) && i < 20)
+    var matchedGameroomName = getPlayerGameroomname(playername);
+
+    if(matchedGameroomName)
     {
-      socket.leave(matchedGameroomName);
+      delete gamerooms[matchedGameroomName];
     }
 
     var keys = Object.keys(playerQueue);
@@ -101,6 +101,19 @@ function onConnect(socket)
     }
   });
 
+  socket.on("message", function (message) {
+    var playername = playernames[socket.id];
+    var matchedGameroomName = getPlayerGameroomname(playername);
+    console.log(message.sendername + ": " + message.message);
+
+    if(matchedGameroomName)
+    {
+      io.in(matchedGameroomName).emit('messaged', message);
+      console.log("Pushed that shieet to: " + matchedGameroomName);
+    }
+
+  })
+
   socket.on("removePlayerFromQueue", function (playername) {
     removePlayerFrom(socket.id, playerQueue);
   });
@@ -110,15 +123,6 @@ function onConnect(socket)
     console.log('Disconnected: %s sockets connected', Object.keys(sockets).length);
     console.log("");
 
-    //Spieler aus gameroom entfernen
-    var playername = playernames[socket.id];
-    var matchedGameroomName;
-    var i = 0;
-    while(matchedGameroomName = getPlayerGameroomname(playername) && i < 20)
-    {
-      socket.leave(matchedGameroomName);
-      i++;
-    }
     console.log(io.sockets.adapter.rooms);
 
     removePlayerFrom(socket.id, playernames);

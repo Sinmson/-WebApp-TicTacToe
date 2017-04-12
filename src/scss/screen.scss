@@ -39,3 +39,12 @@ body, html, #app {
       -ms-flex-align: center;
           align-items: center;
 }
+
+.margin-top-auto {
+  margin-top: auto !important;
+}
+
+.nowrap {
+  -ms-flex-wrap: nowrap;
+      flex-wrap: nowrap;
+}
